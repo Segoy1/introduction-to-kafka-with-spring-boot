@@ -1,6 +1,7 @@
 package dev.lydtech.dispatch.service;
 
 
+import dev.lydtech.dispatch.message.DispatchPreparing;
 import dev.lydtech.dispatch.message.OrderCreated;
 import dev.lydtech.dispatch.message.OrderDispatched;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +17,14 @@ public class DispatchService {
     private final KafkaTemplate<String, Object> kafkaProducer;
 
     public void process(OrderCreated orderCreated) throws Exception{
-        OrderDispatched orderDispatched = OrderDispatched.builder().orderId(orderCreated.getOrderId()).build();
+        DispatchPreparing dispatchPreparing = DispatchPreparing.builder()
+                .orderId(orderCreated.getOrderId())
+                .build();
+        kafkaProducer.send(DISPATCH_TRACKING_TOPIC, dispatchPreparing).get();
+
+        OrderDispatched orderDispatched = OrderDispatched.builder()
+                .orderId(orderCreated.getOrderId())
+                .build();
         kafkaProducer.send(ORDER_DISPATCHED_TOPIC, orderDispatched).get();
-        kafkaProducer.send(DISPATCH_TRACKING_TOPIC, orderDispatched).get();
-//        prepareDispatch(orderDispatched);
-    }
-
-    private void prepareDispatch(OrderDispatched orderDispatched) throws Exception {
-
     }
 }
