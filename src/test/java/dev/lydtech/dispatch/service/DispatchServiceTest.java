@@ -41,6 +41,7 @@ class DispatchServiceTest {
         service.process(testEvent);
 
         verify(kafkaProducerMock, times(1)).send(eq("order.dispatched"), any(OrderDispatched.class));
+
     }
 
     @Test
@@ -51,6 +52,7 @@ class DispatchServiceTest {
         Exception exception = assertThrows(RuntimeException.class, () -> service.process(testEvent));
 
         verify(kafkaProducerMock, times(1)).send(eq("order.dispatched"), any(OrderDispatched.class));
+
         assertThat(exception.getMessage(), equalTo("Producer failure"));
     }
 }
