@@ -6,39 +6,39 @@ import dev.lydtech.dispatch.util.TestEventData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.UUID;
-
 import static java.util.UUID.randomUUID;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 class OrderCreatedHandlerTest {
 
-
     private OrderCreatedHandler handler;
-    private DispatchService dispatchService;
-
+    private DispatchService dispatchServiceMock;
 
     @BeforeEach
     void setUp() {
-        dispatchService = mock(DispatchService.class);
-        handler = new OrderCreatedHandler(dispatchService);
+        dispatchServiceMock = mock(DispatchService.class);
+        handler = new OrderCreatedHandler(dispatchServiceMock);
     }
 
     @Test
-    void listen_Success() throws Exception{
+    void listen_Success() throws Exception {
+        String key = randomUUID().toString();
         OrderCreated testEvent = TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
-        handler.listen(testEvent);
-        verify(dispatchService, times(1)).process(testEvent);
+        handler.listen(0, key, testEvent);
+        verify(dispatchServiceMock, times(1)).process(key, testEvent);
     }
 
     @Test
-    void listen_Throws() throws Exception{
+    public void listen_ServiceThrowsException() throws Exception {
+        String key = randomUUID().toString();
         OrderCreated testEvent = TestEventData.buildOrderCreatedEvent(randomUUID(), randomUUID().toString());
-        doThrow(new RuntimeException("Service failure")).when(dispatchService).process(testEvent);
+        doThrow(new RuntimeException("Service failure")).when(dispatchServiceMock).process(key, testEvent);
 
-        handler.listen(testEvent);
-        verify(dispatchService, times(1)).process(testEvent);
+        handler.listen(0, key, testEvent);
+
+        verify(dispatchServiceMock, times(1)).process(key, testEvent);
     }
 }
