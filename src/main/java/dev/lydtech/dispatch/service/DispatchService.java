@@ -1,6 +1,7 @@
 package dev.lydtech.dispatch.service;
 
 
+import dev.lydtech.dispatch.message.DispatchCompleted;
 import dev.lydtech.dispatch.message.DispatchPreparing;
 import dev.lydtech.dispatch.message.OrderCreated;
 import dev.lydtech.dispatch.message.OrderDispatched;
@@ -11,6 +12,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
@@ -39,6 +41,10 @@ public class DispatchService {
                 .notes("Dispatched: " + orderCreated.getItem())
                 .build();
         kafkaProducer.send(ORDER_DISPATCHED_TOPIC, key, orderDispatched).get();
+
+        DispatchCompleted dispatchCompleted =
+                DispatchCompleted.builder().orderId(orderCreated.getOrderId()).date(Instant.now().toString()).build();
+        kafkaProducer.send(DISPATCH_TRACKING_TOPIC, key, dispatchCompleted);
 
         log.info("Sent messages: key: "+ key +" orderId: " + orderCreated.getOrderId() + " - processedById: " +APPLICATION_ID);
     }
